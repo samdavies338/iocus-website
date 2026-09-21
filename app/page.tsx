@@ -10,18 +10,19 @@ const games = [
 ];
 
 const packages = [
-  { id: "single", number: "01", name: "Single Table", price: "From £95", label: "Small but mighty", description: "One game table with all the accessories, chips and clear instructions you need. A great fit for house parties and smaller groups.", includes: ["Choose any one game", "Complete table kit", "Printed + digital guide"] },
-  { id: "casino", number: "02", name: "Casino Night", price: "From £150", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment to keep a medium-sized event moving all evening.", includes: ["Choose any two games", "Two complete table kits", "Video hosting guides"] },
-  { id: "full", number: "03", name: "Full House", price: "From £200", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "All equipment included", "Best value package"] },
+  { id: "single", number: "01", name: "Single", price: "£95", label: "For smaller gatherings", description: "One ready-to-use game table with its accessories, chips and a clear printed guide.", includes: ["Choose any one game", "500 chips included", "Accessories + printed guide"] },
+  { id: "night", number: "02", name: "Night", price: "£160", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment for a medium-sized event.", includes: ["Choose any two games", "1,000 chips included", "Printed hosting guides"] },
+  { id: "full", number: "03", name: "Full House", price: "£200", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "1,000 chips included", "Full printed guides"] },
 ];
 
 const faqs = [
   ["Do you provide a croupier?", "No. IOCUS is deliberately self-service. We provide ready-to-use tables, all the equipment and straightforward hosting guides so you or a guest can run each game with confidence."],
   ["Do we play for real money?", "No. The chips are for entertainment only and have no cash value. You can create your own prize format, but no real-money gambling takes place."],
-  ["What comes with each table?", "Every table comes with its own chips and accessories. Blackjack and poker include cards; roulette includes the wheel, ball and rake. Every game also includes printed and digital instructions."],
-  ["Can I add another table?", "Yes. Individual tables can be added to a package, subject to availability. Tell us what you have in mind and we’ll include it in the quote."],
-  ["How do collection and delivery work?", "Collection is available by arrangement. Delivery and collection can also be quoted based on your venue, access and timings."],
-  ["Is there a deposit?", "Yes. A £250 refundable security deposit is taken for each hire and returned after the equipment has been checked back in safely."],
+  ["What comes with each table?", "Every table comes with its own chips and accessories. Blackjack and poker include cards; roulette includes the wheel, ball and rake. Clear printed instructions are included too."],
+  ["How many tables and chips will I need?", "That depends on your party size and the type of event. Tell us your estimated guest count and we’ll help you choose the right package and chip quantity."],
+  ["Can I hire more chips?", "Yes. Additional chips can be hired in batches of 500 for £25 per batch."],
+  ["How do collection and delivery work?", "Collection is available by arrangement in East Devon. Delivery and collection within the East Devon area can also be quoted based on your venue, access and timings."],
+  ["Is there a deposit?", "Yes. A £250 refundable deposit is required for every hire. Our aim is to return it in full once the equipment is returned and checked; normal wear and tear will not affect it."],
 ];
 
 export default function Home() {
@@ -48,7 +49,7 @@ export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <Link className="brand" href="#home" aria-label="IOCUS home"><span className="chip-mark">I</span><span>IOCUS</span></Link>
+        <Link className="brand" href="#home" aria-label="Iocus Casino home"><span className="chip-mark">I</span><span>IOCUS CASINO</span></Link>
         <nav aria-label="Main navigation"><Link href="#how">How it works</Link><Link href="#packages">Games & packages</Link><Link href="#guides">Hosting guides</Link><Link href="#faqs">FAQs</Link><Link className="nav-cta" href="#enquire">Enquire <span>↗</span></Link></nav>
       </header>
 
@@ -59,7 +60,7 @@ export default function Home() {
           <h1>Host the casino night <em>yourself.</em></h1>
           <p className="hero-intro">Three classic table games. All the equipment. Simple guides that show you exactly what to do. No croupiers, no complicated setup—just a brilliant night ready to play.</p>
           <div className="hero-actions"><Link className="primary-btn" href="#packages">Choose your package <span>↗</span></Link><Link className="text-link" href="#how">See how it works <span>↓</span></Link></div>
-          <div className="trust-row"><span>✓ Tables & accessories included</span><span>✓ Printed, digital & video guides</span><span>✓ From £200 for all three tables</span></div>
+          <div className="trust-row"><span>✓ Tables & accessories included</span><span>✓ Printed hosting guides</span><span>✓ £200 for all three tables</span></div>
         </div>
         <div className="table-stack" aria-label="Available games">
           <article className="game-ticket ticket-one"><span>♠</span><small>01</small><strong>BLACKJACK</strong><b>READY TO PLAY</b></article>
@@ -74,9 +75,9 @@ export default function Home() {
       <section className="how section" id="how">
         <div className="section-heading"><div><p className="eyebrow dark"><span /> How it works</p><h2>A complete casino night.<br /><em>You’re the host.</em></h2></div><p>We supply the physical setup and the know-how. You supply the people, the venue and the energy.</p></div>
         <div className="steps-grid">
-          <article><b>01</b><span className="step-icon">♣</span><h3>Pick your tables</h3><p>Choose one, two or all three games. Add another table if your guest list needs it.</p></article>
-          <article><b>02</b><span className="step-icon">▣</span><h3>Collect or arrange delivery</h3><p>Collect your package by arrangement, or ask for a delivery quote based on your venue and timings.</p></article>
-          <article><b>03</b><span className="step-icon">▶</span><h3>Learn in minutes</h3><p>Use the printed instructions, digital reference and video guides to get every table running.</p></article>
+          <article><b>01</b><span className="step-icon">♣</span><h3>Pick your tables</h3><p>Your party size helps determine how many tables and chips you’ll need. Choose one, two or all three games.</p></article>
+          <article><b>02</b><span className="step-icon">▣</span><h3>Collect or arrange delivery</h3><p>Collect in East Devon by arrangement, or ask for a delivery quote for your East Devon venue.</p></article>
+          <article><b>03</b><span className="step-icon">☰</span><h3>Learn in minutes</h3><p>Use the clear printed setup and game guides to get every table running.</p></article>
           <article><b>04</b><span className="step-icon">★</span><h3>Host your night</h3><p>Set out the chips, choose your hosts and play. No professional croupier is required.</p></article>
         </div>
       </section>
@@ -84,36 +85,38 @@ export default function Home() {
       <section className="games section-dark" id="games">
         <div className="section-heading light"><div><p className="eyebrow"><span /> Three tables. Endless competition.</p><h2>The games everyone<br /><em>wants to play.</em></h2></div><p>Every game arrives as its own ready-to-use table kit, with the right chips, cards or accessories and a clear guide.</p></div>
         <div className="games-grid">{games.map((game) => <article className={`game-card ${game.tone}`} key={game.name}><div className="game-card-top"><span>{game.suit}</span><small>IOCUS TABLE GAME</small></div><p>{game.kicker}</p><h3>{game.name}</h3><div className="game-includes"><b>IN YOUR KIT</b><span>{game.includes}</span></div></article>)}</div>
+        <div className="table-photo-heading"><p className="eyebrow"><span /> The actual tables</p><h3>See exactly what you’ll hire.</h3><p>Real photographs of each Iocus Casino table will be added here as soon as they are supplied.</p></div>
+        <div className="table-photo-grid">{games.map((game) => <article key={game.name}><div className="photo-placeholder" aria-label={`${game.name} table photograph coming soon`}><span>{game.suit}</span><small>TABLE PHOTO COMING SOON</small></div><h3>{game.name} table</h3><p>Awaiting the supplied product photograph.</p></article>)}</div>
       </section>
 
       <section className="packages section" id="packages">
-        <div className="section-heading"><div><p className="eyebrow dark"><span /> Packages & prices</p><h2>Choose your<br /><em>starting hand.</em></h2></div><p>Simple starting prices for the equipment hire. A refundable £250 security deposit applies, and delivery is quoted separately.</p></div>
-        <div className="package-grid">{packages.map((item) => <article className={`package-card ${item.id === "casino" ? "featured" : ""}`} key={item.id}>{item.id === "casino" && <span className="popular">EXPECTED FAVOURITE</span>}<div className="package-top"><b>{item.number}</b><span>{item.label}</span></div><h3>{item.name}<br />Package</h3><strong className="package-price">{item.price}</strong><p>{item.description}</p><ul>{item.includes.map((line) => <li key={line}>✓ {line}</li>)}</ul><Link href="#enquire">Enquire about this package <span>↗</span></Link></article>)}</div>
-        <div className="price-note"><span>＋</span><div><strong>Need another table?</strong><p>Individual blackjack, poker or roulette tables can be added to a package, subject to availability. We’ll price additions in your quote.</p></div></div>
+        <div className="section-heading"><div><p className="eyebrow dark"><span /> Packages & prices</p><h2>Choose your<br /><em>starting hand.</em></h2></div><p>Clear prices for the equipment hire. A refundable £250 security deposit applies, and delivery is quoted separately.</p></div>
+        <div className="package-grid">{packages.map((item) => <article className={`package-card ${item.id === "night" ? "featured" : ""}`} key={item.id}>{item.id === "night" && <span className="popular">EXPECTED FAVOURITE</span>}<div className="package-top"><b>{item.number}</b><span>{item.label}</span></div><h3>{item.name}<br />Package</h3><strong className="package-price">{item.price}</strong><p>{item.description}</p><ul>{item.includes.map((line) => <li key={line}>✓ {line}</li>)}</ul><Link href="#enquire">Enquire about this package <span>↗</span></Link></article>)}</div>
+        <div className="price-note"><span>＋</span><div><strong>Need more chips?</strong><p>Additional chips can be hired in batches of 500 for £25. Your party size will help determine the number of tables and chips you need.</p></div></div>
       </section>
 
       <section className="guides section-dark" id="guides">
-        <div className="guide-copy"><p className="eyebrow"><span /> Hosting guides</p><h2>Never dealt a hand?<br /><em>No problem.</em></h2><p>IOCUS is designed for first-time hosts. Every hire comes with three layers of guidance so you can learn the basics before the event and keep a quick reference beside each table.</p><Link className="primary-btn" href="#enquire">Ask about a package <span>↗</span></Link></div>
-        <div className="guide-list"><article><span>01</span><div><h3>Printed table guides</h3><p>Quick rules, setup diagrams and the order of play—kept beside each table during the event.</p></div></article><article><span>02</span><div><h3>Digital instructions</h3><p>Mobile-friendly guides you can share with anyone helping to run blackjack, poker or roulette.</p></div></article><article><span>03</span><div><h3>Video walkthroughs</h3><p>Short videos covering setup, hosting, common questions and how to keep each game moving.</p></div></article></div>
+        <div className="guide-copy"><p className="eyebrow"><span /> Hosting guides</p><h2>Never dealt a hand?<br /><em>No problem.</em></h2><p>Iocus Casino is designed for first-time hosts. Every hire includes clear printed guidance you can read before the event and keep beside each table while you play.</p><Link className="primary-btn" href="#enquire">Ask about a package <span>↗</span></Link></div>
+        <div className="guide-list"><article><span>01</span><div><h3>Quick-start setup</h3><p>Simple steps for setting up the table, accessories and chips before guests arrive.</p></div></article><article><span>02</span><div><h3>Printed game rules</h3><p>Easy-to-follow rules and the order of play for blackjack, poker and roulette.</p></div></article><article><span>03</span><div><h3>Host tips</h3><p>Practical guidance for explaining each game and keeping the evening moving.</p></div></article></div>
       </section>
 
       <section className="logistics section" id="delivery">
         <div className="section-heading"><div><p className="eyebrow dark"><span /> Collection & delivery</p><h2>Get the tables<br /><em>your way.</em></h2></div></div>
-        <div className="logistics-grid"><article><span>01</span><h3>Collection</h3><p>Collect and return your package at arranged times. We’ll confirm the collection point and loading details with your booking.</p><b>Included by arrangement</b></article><article><span>02</span><h3>Delivery & collection</h3><p>We can quote for delivery and collection based on your postcode, access, package size and event timings.</p><b>Quoted for your event</b></article></div>
+        <div className="logistics-grid"><article><span>01</span><h3>Collection in East Devon</h3><p>Collect and return your package at arranged times. We’ll confirm the collection point and loading details with your booking.</p><b>Included by arrangement</b></article><article><span>02</span><h3>East Devon delivery</h3><p>We can quote for delivery and collection in the East Devon area based on your postcode, access, package size and event timings.</p><b>Quoted for your event</b></article></div>
       </section>
 
       <section className="faqs section" id="faqs"><div className="faq-title"><p className="eyebrow dark"><span /> Frequently asked</p><h2>Good to<br /><em>know.</em></h2></div><div className="faq-list">{faqs.map(([question, answer], index) => <details key={question} open={index === 0}><summary><span>{question}</span><b>＋</b></summary><p>{answer}</p></details>)}</div></section>
 
-      <section className="terms section-dark" id="terms"><div><p className="eyebrow"><span /> Hire terms</p><h2>Clear rules.<br /><em>No surprises.</em></h2></div><div className="terms-grid"><article><b>£250</b><h3>Refundable deposit</h3><p>Returned after all hired equipment is checked back in safely and in the agreed condition.</p></article><article><b>01</b><h3>Care of equipment</h3><p>The hirer is responsible for loss or damage beyond reasonable wear while the package is in their care.</p></article><article><b>18+</b><h3>Entertainment only</h3><p>IOCUS equipment is for social entertainment. Chips have no cash value and must not be used for real-money gambling.</p></article><article><b>✓</b><h3>Booking agreement</h3><p>Dates, payment, cancellation, access and return arrangements are confirmed in the quote and final hire agreement.</p></article></div><p className="terms-note">Full terms and conditions are supplied before a booking is confirmed.</p></section>
+      <section className="terms section-dark" id="terms"><div><p className="eyebrow"><span /> Hire terms</p><h2>Clear rules.<br /><em>No surprises.</em></h2></div><div className="terms-grid"><article><b>£250</b><h3>Refundable deposit</h3><p>A refundable deposit is required for every hire. Our aim is to return every deposit after the equipment is returned and checked.</p></article><article><b>01</b><h3>Care while hired</h3><p>While the tables are in your care, it is your responsibility to look after them as though they were your own.</p></article><article><b>✓</b><h3>Fair wear and tear</h3><p>We understand that normal wear and tear happens and this will not affect your deposit.</p></article><article><b>!</b><h3>Damage and contact</h3><p>Careless damage must be made right by repair or replacement. Contact us promptly so we can advise on the best resolution.</p></article></div><p className="terms-note">Equipment is for social entertainment only. Chips have no cash value and must not be used for real-money gambling. Full terms are supplied before booking.</p></section>
 
       <section className="enquiry section" id="enquire">
         <div className="enquiry-intro"><p className="eyebrow dark"><span /> Plan your DIY casino night</p><h2>Tell us what’s<br /><em>on the cards.</em></h2><p>Choose a package, games and collection option. We’ll confirm availability and send a tailored quote. No payment or commitment at this stage.</p><div className="deposit-callout"><span>£250</span><p><strong>Refundable security deposit</strong><br />Taken with confirmed bookings and returned after the equipment is checked back in.</p></div></div>
         <form className="enquiry-form" onSubmit={submitEnquiry}>
           <div className="form-head"><span>ENQUIRY DETAILS</span><small>Usually takes 2 minutes</small></div>
-          <fieldset><legend>Which package are you considering?</legend><div className="package-options">{packages.map((item) => <label className="radio-card" key={item.id}><input type="radio" name="packageName" value={item.name} required /><span><b>{item.name}</b><small>{item.price}</small></span></label>)}</div></fieldset>
+          <fieldset><legend>Which package are you considering?</legend><div className="package-options">{packages.map((item) => <label className="radio-card" key={item.id}><input type="radio" name="packageName" value={`${item.name} Package`} required /><span><b>{item.name} Package</b><small>{item.price}</small></span></label>)}</div></fieldset>
           <fieldset><legend>Which tables interest you?</legend><div className="game-options">{games.map((game) => <button type="button" className={selectedGames.includes(game.name) ? "selected" : ""} onClick={() => toggleGame(game.name)} key={game.name}><span>{selectedGames.includes(game.name) ? "✓" : "+"}</span>{game.name}</button>)}</div></fieldset>
           <div className="form-row"><label>Event type<select name="eventType" required defaultValue=""><option value="" disabled>Select one</option><option>House party</option><option>Wedding</option><option>Corporate event</option><option>Charity event</option><option>Other</option></select></label><label>Event date<input type="date" name="eventDate" required /></label></div>
-          <label>Venue or postcode<input type="text" name="venue" placeholder="e.g. Guildford, GU1" required /></label>
+          <label>Venue or postcode<input type="text" name="venue" placeholder="e.g. Exmouth, EX8" required /></label>
           <div className="guest-control"><span><strong>Estimated guests</strong><small>A rough number is absolutely fine</small></span><div><button type="button" onClick={() => setGuestCount(Math.max(10, guestCount - 10))} aria-label="Reduce guest count">−</button><output>{guestCount}</output><button type="button" onClick={() => setGuestCount(guestCount + 10)} aria-label="Increase guest count">+</button></div></div>
           <fieldset><legend>How would you like to receive the tables?</legend><div className="option-grid"><label className="radio-card"><input type="radio" name="fulfilment" value="Collection" required /><span>Collection</span></label><label className="radio-card"><input type="radio" name="fulfilment" value="Delivery quote" required /><span>Quote for delivery</span></label></div></fieldset>
           <label>Anything else we should know?<textarea name="notes" rows={3} placeholder="Timings, access, extra tables or questions…" /></label>
@@ -125,7 +128,7 @@ export default function Home() {
         </form>
       </section>
 
-      <footer><div className="brand"><span className="chip-mark">I</span><span>IOCUS</span></div><p>Ready-to-use casino table hire. Hosted by you.</p><div><Link href="#how">How it works</Link><Link href="#packages">Packages</Link><Link href="#guides">Guides</Link><Link href="#faqs">FAQs</Link><Link href="#terms">Terms</Link></div><small>© 2026 IOCUS. Entertainment only. No real-money gambling.</small></footer>
+      <footer><div className="brand"><span className="chip-mark">I</span><span>IOCUS CASINO</span></div><p>Ready-to-use casino table hire. Hosted by you.</p><div><Link href="#how">How it works</Link><Link href="#packages">Packages</Link><Link href="#guides">Guides</Link><Link href="#faqs">FAQs</Link><Link href="#terms">Terms</Link></div><small>© 2026 Iocus Casino. Entertainment only. No real-money gambling.</small></footer>
     </main>
   );
 }
