@@ -7,8 +7,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = headerStore.get("host") || "localhost:3000";
   const protocol = headerStore.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "IOCUS | DIY Casino Table Hire";
-  const description = "Ready-to-use blackjack, poker and roulette table packages with chips, accessories and simple hosting guides. No croupier needed.";
+  const title = "Iocus Casino | DIY Casino Table Hire in East Devon";
+  const description = "Hire ready-to-use blackjack, poker and roulette tables in East Devon, with chips, accessories and printed hosting guides. No croupier needed.";
   return {
     metadataBase: new URL(origin), title, description,
     icons: { icon: "/favicon.svg" },
