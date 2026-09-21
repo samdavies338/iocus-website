@@ -24,7 +24,8 @@ Additional chips can be hired in batches of 500 for £25. Party size determines 
 - Frequently asked questions and key hire terms.
 - Enquiry form with package, table, event and fulfilment choices.
 - Persistent enquiry storage using Cloudflare D1.
-- Private production deployment through OpenAI Sites.
+- Optional owner and customer email notifications through Resend.
+- Public production deployment through OpenAI Sites.
 
 ## Local development
 
@@ -45,6 +46,14 @@ npm run db:generate
 ```
 
 Database definitions live in `db/schema.ts`, with generated migrations stored in `drizzle/`.
+
+## Enquiry email configuration
+
+Enquiries are always saved to the database. To also send an owner notification and customer acknowledgement, configure these production environment variables in Sites:
+
+- `RESEND_API_KEY` — stored as a secret.
+- `ENQUIRY_FROM_EMAIL` — an address on a domain verified with Resend.
+- `ENQUIRY_TO_EMAIL` — the private inbox that receives new enquiries.
 
 ## Important business rules
 
