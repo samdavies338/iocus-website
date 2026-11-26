@@ -9,10 +9,16 @@ const games = [
   { suit: "●", name: "Roulette", kicker: "Place your bets", includes: "Roulette table, wheel, ball, rake, chips and betting guide.", tone: "gold" },
 ];
 
+const gallery = [
+  { game: "Roulette", image: "/casino-night-roulette.jpg", width: 1440, height: 960, alt: "Friends gathered around a roulette table in a living room" },
+  { game: "Poker", image: "/casino-night-poker.jpg", width: 1440, height: 1080, alt: "Friends holding cards around a green poker table at home" },
+  { game: "Blackjack", image: "/casino-night-blackjack.jpg", width: 1440, height: 960, alt: "A guest dealing cards at a blue blackjack table while friends look on" },
+];
+
 const packages = [
-  { id: "single", name: "Single", price: "£95", label: "For smaller gatherings", description: "One ready-to-use game table with its accessories, chips and a clear printed guide.", includes: ["Choose any one game", "500 chips included", "Accessories + printed guide"] },
-  { id: "night", name: "Night", price: "£160", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment for a medium-sized event.", includes: ["Choose any two games", "1,000 chips included", "Printed hosting guides"] },
-  { id: "full", name: "Full House", price: "£200", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "1,000 chips included", "Full printed guides"] },
+  { id: "single", name: "Single", price: "£95", gameCount: 1, gameLabel: "1 game table", label: "For smaller gatherings", description: "One ready-to-use game table with its accessories, chips and a clear printed guide.", includes: ["Choose any one game", "500 chips included", "Accessories + printed guide"] },
+  { id: "night", name: "Night", price: "£160", gameCount: 2, gameLabel: "2 game tables", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment for a medium-sized event.", includes: ["Choose any two games", "1,000 chips included", "Printed hosting guides"] },
+  { id: "full", name: "Full House", price: "£200", gameCount: 3, gameLabel: "All 3 game tables", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "1,000 chips included", "Full printed guides"] },
 ];
 
 const faqs = [
@@ -26,22 +32,51 @@ const faqs = [
 ];
 
 export default function Home() {
-  const [selectedGames, setSelectedGames] = useState<string[]>(["Blackjack", "Poker", "Roulette"]);
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [selectedGames, setSelectedGames] = useState<string[]>([]);
   const [guestCount, setGuestCount] = useState(40);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
-  const toggleGame = (game: string) => setSelectedGames((current) => current.includes(game) ? current.filter((item) => item !== game) : [...current, game]);
+  const selectedPackage = packages.find((item) => item.id === selectedPackageId);
+  const requiredGameCount = selectedPackage?.gameCount ?? 0;
+  const hasCompleteGameSelection = requiredGameCount > 0 && selectedGames.length === requiredGameCount;
+  const gameSelectionMessage = !selectedPackage
+    ? "Choose a package first, then select your tables."
+    : selectedPackage.gameCount === games.length
+      ? "Full House includes all three game tables."
+      : `${selectedPackage.name} Package includes ${selectedPackage.gameCount} game ${selectedPackage.gameCount === 1 ? "table" : "tables"}. ${hasCompleteGameSelection ? "Your selection is complete." : `Choose ${selectedPackage.gameCount - selectedGames.length} more.`}`;
+
+  const choosePackage = (packageId: string) => {
+    const nextPackage = packages.find((item) => item.id === packageId);
+    if (!nextPackage) return;
+    setSelectedPackageId(packageId);
+    setSelectedGames((current) => nextPackage.gameCount === games.length
+      ? games.map((game) => game.name)
+      : current.slice(0, nextPackage.gameCount));
+  };
+
+  const toggleGame = (game: string) => {
+    if (!selectedPackage || selectedPackage.gameCount === games.length) return;
+    setSelectedGames((current) => {
+      if (current.includes(game)) return current.filter((item) => item !== game);
+      if (current.length >= selectedPackage.gameCount) return current;
+      return [...current, game];
+    });
+  };
 
   async function submitEnquiry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (status === "sending" || !hasCompleteGameSelection) return;
+    const formElement = event.currentTarget;
     setStatus("sending");
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     try {
       const response = await fetch("/api/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...Object.fromEntries(form.entries()), games: selectedGames, guestCount }) });
       if (!response.ok) throw new Error("Unable to send");
       setStatus("success");
-      event.currentTarget.reset();
-      setSelectedGames(["Blackjack", "Poker", "Roulette"]);
+      formElement.reset();
+      setSelectedPackageId("");
+      setSelectedGames([]);
       setGuestCount(40);
     } catch { setStatus("error"); }
   }
@@ -87,6 +122,28 @@ export default function Home() {
         <div className="games-grid">{games.map((game) => <article className={`game-card ${game.tone}`} key={game.name}><div className="game-card-top"><span>{game.suit}</span><small>IOCUS TABLE GAME</small></div><p>{game.kicker}</p><h3>{game.name}</h3><div className="game-includes"><b>IN YOUR KIT</b><span>{game.includes}</span></div></article>)}</div>
       </section>
 
+      <section className="casino-gallery section" aria-labelledby="casino-gallery-title">
+        <div className="casino-gallery-heading">
+          <h2 id="casino-gallery-title">Casino night at home</h2>
+          <p>AI-generated scenes for inspiration.</p>
+        </div>
+        <div className="casino-gallery-grid">
+          {gallery.map((item) => (
+            <figure key={item.game}>
+              <img
+                src={item.image}
+                alt={item.alt}
+                width={item.width}
+                height={item.height}
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>{item.game}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
       <section className="packages section" id="packages">
         <div className="section-heading"><div><p className="eyebrow dark"><span /> Packages & prices</p><h2>Choose your<br /><em>starting hand.</em></h2></div><p>Clear prices for the equipment hire. A refundable £250 security deposit applies, and delivery is quoted separately.</p></div>
         <div className="package-grid">{packages.map((item) => <article className={`package-card ${item.id === "night" ? "featured" : ""}`} key={item.id}>{item.id === "night" && <span className="popular">EXPECTED FAVOURITE</span>}<div className="package-top"><span>{item.label}</span></div><h3>{item.name}<br />Package</h3><strong className="package-price">{item.price}</strong><p>{item.description}</p><ul>{item.includes.map((line) => <li key={line}>✓ {line}</li>)}</ul><Link href="#enquire">Enquire about this package <span>↗</span></Link></article>)}</div>
@@ -109,8 +166,12 @@ export default function Home() {
         <div className="enquiry-intro"><p className="eyebrow dark"><span /> Plan your DIY casino night</p><h2>Tell us what’s<br /><em>on the cards.</em></h2><p>Choose a package, games and collection option. We’ll confirm availability and send a tailored quote. No payment or commitment at this stage.</p><div className="deposit-callout"><span>£250</span><p><strong>Refundable security deposit</strong><br />Taken with confirmed bookings and returned after the equipment is checked back in.</p></div></div>
         <form className="enquiry-form" onSubmit={submitEnquiry}>
           <div className="form-head"><span>ENQUIRY DETAILS</span><small>Usually takes 2 minutes</small></div>
-          <fieldset><legend>Which package are you considering?</legend><div className="package-options">{packages.map((item) => <label className="radio-card" key={item.id}><input type="radio" name="packageName" value={`${item.name} Package`} required /><span><b>{item.name} Package</b><small>{item.price}</small></span></label>)}</div></fieldset>
-          <fieldset><legend>Which tables interest you?</legend><div className="game-options">{games.map((game) => <button type="button" className={selectedGames.includes(game.name) ? "selected" : ""} onClick={() => toggleGame(game.name)} key={game.name}><span>{selectedGames.includes(game.name) ? "✓" : "+"}</span>{game.name}</button>)}</div></fieldset>
+          <fieldset><legend>Which package are you considering?</legend><div className="package-options">{packages.map((item) => <label className="radio-card" key={item.id}><input type="radio" name="packageName" value={`${item.name} Package`} checked={selectedPackageId === item.id} onChange={() => choosePackage(item.id)} required /><span><b>{item.name} Package</b><small>{item.price} · {item.gameLabel}</small></span></label>)}</div></fieldset>
+          <fieldset><legend>Which tables interest you?</legend><div className="game-options">{games.map((game) => {
+            const isSelected = selectedGames.includes(game.name);
+            const isLocked = !selectedPackage || selectedPackage.gameCount === games.length || (!isSelected && selectedGames.length >= selectedPackage.gameCount);
+            return <button type="button" className={isSelected ? "selected" : ""} onClick={() => toggleGame(game.name)} disabled={isLocked} aria-pressed={isSelected} key={game.name}><span>{isSelected ? "✓" : "+"}</span>{game.name}</button>;
+          })}</div><p className="game-limit-note" aria-live="polite">{gameSelectionMessage}</p></fieldset>
           <div className="form-row"><label>Event type<select name="eventType" required defaultValue=""><option value="" disabled>Select one</option><option>House party</option><option>Wedding</option><option>Corporate event</option><option>Charity event</option><option>Other</option></select></label><label>Event date<input type="date" name="eventDate" required /></label></div>
           <label>Venue or postcode<input type="text" name="venue" placeholder="e.g. Exmouth, EX8" required /></label>
           <div className="guest-control"><span><strong>Estimated guests</strong><small>A rough number is absolutely fine</small></span><div><button type="button" onClick={() => setGuestCount(Math.max(10, guestCount - 10))} aria-label="Reduce guest count">−</button><output>{guestCount}</output><button type="button" onClick={() => setGuestCount(guestCount + 10)} aria-label="Increase guest count">+</button></div></div>
@@ -120,7 +181,7 @@ export default function Home() {
           <label>Email address<input type="email" name="email" autoComplete="email" required /></label>
           <aside className="hire-information" id="hire-information"><h3>Important hire information</h3><p>A £250 refundable deposit is required for every hire. Our aim is to return the full deposit when the hired tables are returned. While the tables are in your care, please look after them as though they were your own.</p><p>We understand that normal wear and tear happens and this will not affect your deposit. Damage caused by carelessness will need to be made right through repair or replacement. If damage occurs, please contact us as soon as possible so we can advise on the best way to resolve it.</p></aside>
           <label className="consent"><input type="checkbox" required /><span>I have read and understand the important hire information, including the £250 refundable deposit, and agree to be contacted about this enquiry.</span></label>
-          <button className="submit-btn" type="submit" disabled={status === "sending" || selectedGames.length === 0}>{status === "sending" ? "Sending…" : "Request my quote"}<span>↗</span></button>
+          <button className="submit-btn" type="submit" disabled={status === "sending" || !hasCompleteGameSelection}>{status === "sending" ? "Sending…" : "Request my quote"}<span>↗</span></button>
           <p className="form-status" aria-live="polite">{status === "success" && "Thanks — your enquiry is in. We’ll be in touch with availability and a quote."}{status === "error" && "Something went wrong. Please try again."}{status === "idle" && "No payment yet — we’ll confirm availability and pricing first."}</p>
         </form>
       </section>

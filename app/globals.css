@@ -7,3 +7,26 @@
 .step-icon{margin:20px 0}.package-card h3{margin-top:42px}.guide-list article{display:block}.logistics-grid{grid-template-columns:repeat(3,1fr)}.logistics-grid h3{margin-top:20px}.hire-information{border:1px solid #c7bda9;border-left:4px solid var(--gold);background:var(--paper);padding:22px 24px}.hire-information h3{margin:0 0 10px;font-size:17px}.hire-information p{margin:8px 0;color:var(--muted);font-size:11px;line-height:1.7}
 @media(max-width:1050px){.logistics-grid{grid-template-columns:1fr}.logistics-grid article{min-height:0}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.enquiry-form input:not([type="checkbox"]):not([type="radio"]),.enquiry-form select{height:48px;min-height:48px;box-sizing:border-box;line-height:20px}
+.enquiry-form select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23534b59' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.7' d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:18px;padding-right:45px}
+.enquiry-form input[type="date"]{min-width:0;padding-right:12px}
+.enquiry-form input[type="date"]::-webkit-calendar-picker-indicator{width:21px;height:21px;padding:3px;cursor:pointer;opacity:.72}
+.game-options button:disabled{opacity:.45;cursor:not-allowed}
+.game-options button.selected:disabled{opacity:1;cursor:default}
+.game-limit-note{margin:9px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.submit-btn:disabled{cursor:not-allowed}
+
+.casino-gallery{background:var(--cream)}
+.casino-gallery-heading{margin-bottom:2rem}
+.casino-gallery-heading h2{margin:0 0 .65rem}
+.casino-gallery-heading p{margin:0;color:var(--muted);font-size:.875rem}
+.casino-gallery-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem}
+.casino-gallery-grid figure{margin:0;min-width:0}
+.casino-gallery-grid figure:first-child{grid-column:1/-1}
+.casino-gallery-grid img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.casino-gallery-grid figure:first-child img{aspect-ratio:2/1}
+.casino-gallery-grid figcaption{padding-top:.65rem;font-size:.875rem;font-weight:700}
+@media(max-width:650px){
+  .casino-gallery-grid{grid-template-columns:1fr}
+  .casino-gallery-grid figure:first-child img{aspect-ratio:3/2}
+}
