@@ -30,3 +30,50 @@
   .casino-gallery-grid{grid-template-columns:1fr}
   .casino-gallery-grid figure:first-child img{aspect-ratio:3/2}
 }
+
+.radio-card{position:relative;min-width:0}
+.enquiry-form .radio-card input{
+  inset:0 auto auto 0;
+  width:1px;
+  height:1px;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.radio-card input:focus-visible+span{
+  outline:3px solid rgba(212,170,66,.65);
+  outline-offset:2px;
+}
+.enquiry-form,.enquiry-form fieldset,.form-row label{min-width:0}
+
+@media(max-width:800px){
+  .hero{height:auto;min-height:0;flex-direction:column;align-items:center;padding-bottom:3rem}
+  .hero-copy{width:100%;padding-inline:6vw}
+  .table-stack{
+    position:relative;
+    inset:auto;
+    width:min(84%, 30rem);
+    height:clamp(14rem, 57vw, 21rem);
+    margin-top:2rem;
+  }
+  .game-ticket{
+    width:clamp(7.5rem, 42vw, 13rem);
+    height:clamp(10rem, 49vw, 16rem);
+    padding:clamp(.9rem, 4vw, 1.25rem);
+  }
+  .ticket-one{left:33%;right:auto;top:0}
+  .ticket-two{left:0;right:auto;top:11%}
+  .ticket-three{left:auto;right:0;top:20%}
+  .game-ticket strong{font-size:clamp(1rem, 4.25vw, 1.45rem)}
+  .self-hosted-stamp{right:7%;bottom:1.5rem;width:clamp(3.75rem, 16vw, 5.5rem);height:clamp(3.75rem, 16vw, 5.5rem);font-size:clamp(1rem, 4vw, 1.375rem)}
+  .self-hosted-stamp strong{font-size:clamp(.42rem, 1.5vw, .625rem)}
+  .ticker{height:auto;min-height:48px;flex-wrap:wrap;justify-content:center;gap:.55rem 1rem;padding:.85rem 1rem}
+}
+
+@media(max-width:560px){
+  .hero h1{font-size:clamp(2.75rem, 12.75vw, 3.5rem)}
+  .site-header .brand{gap:9px;font-size:clamp(.75rem, 3.8vw, 1.0625rem)}
+  .site-header .chip-mark{flex-shrink:0}
+  .site-header .nav-cta{white-space:nowrap}
+  .ticker b{display:none}
+}

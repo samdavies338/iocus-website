@@ -80,22 +80,24 @@ async function sendEnquiryEmails(data: EnquiryData, enquiryId: string) {
 
   if (!apiKey || !from || !ownerEmail) return false;
 
+  // Reorder the date-only form value without introducing a time zone.
+  const eventDate = data.eventDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$3-$2-$1");
   const safe = {
     name: escapeHtml(data.name), email: escapeHtml(data.email), phone: escapeHtml(data.phone),
     eventType: escapeHtml(data.eventType), packageName: escapeHtml(data.packageName),
-    games: escapeHtml(data.games.join(", ")), eventDate: escapeHtml(data.eventDate),
+    games: escapeHtml(data.games.join(", ")), eventDate: escapeHtml(eventDate),
     venue: escapeHtml(data.venue), guestCount: escapeHtml(data.guestCount),
     fulfilment: escapeHtml(data.fulfilment), notes: escapeHtml(data.notes || "None supplied"),
   };
 
-  const ownerText = `New Iocus Casino enquiry\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nEvent: ${data.eventType}\nPackage: ${data.packageName}\nTables: ${data.games.join(", ")}\nDate: ${data.eventDate}\nVenue: ${data.venue}\nGuests: ${data.guestCount}\nCollection or delivery: ${data.fulfilment}\nNotes: ${data.notes || "None supplied"}`;
+  const ownerText = `New Iocus Casino enquiry\n\nName: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nEvent: ${data.eventType}\nPackage: ${data.packageName}\nTables: ${data.games.join(", ")}\nDate: ${eventDate}\nVenue: ${data.venue}\nGuests: ${data.guestCount}\nCollection or delivery: ${data.fulfilment}\nNotes: ${data.notes || "None supplied"}`;
   const ownerHtml = `<h1>New Iocus Casino enquiry</h1><table cellpadding="7" cellspacing="0" style="border-collapse:collapse"><tr><td><strong>Name</strong></td><td>${safe.name}</td></tr><tr><td><strong>Email</strong></td><td>${safe.email}</td></tr><tr><td><strong>Phone</strong></td><td>${safe.phone}</td></tr><tr><td><strong>Event</strong></td><td>${safe.eventType}</td></tr><tr><td><strong>Package</strong></td><td>${safe.packageName}</td></tr><tr><td><strong>Tables</strong></td><td>${safe.games}</td></tr><tr><td><strong>Date</strong></td><td>${safe.eventDate}</td></tr><tr><td><strong>Venue</strong></td><td>${safe.venue}</td></tr><tr><td><strong>Guests</strong></td><td>${safe.guestCount}</td></tr><tr><td><strong>Collection or delivery</strong></td><td>${safe.fulfilment}</td></tr><tr><td><strong>Notes</strong></td><td>${safe.notes}</td></tr></table>`;
 
-  const customerText = `Hi ${data.name},\n\nThanks for your Iocus Casino enquiry. We have received your details for ${data.eventDate} and will be in touch to confirm availability and provide a quote.\n\nThere is no payment or booking commitment at this stage.\n\nIocus Casino`;
+  const customerText = `Hi ${data.name},\n\nThanks for your Iocus Casino enquiry. We have received your details for ${eventDate} and will be in touch to confirm availability and provide a quote.\n\nThere is no payment or booking commitment at this stage.\n\nIocus Casino`;
   const customerHtml = `<p>Hi ${safe.name},</p><p>Thanks for your Iocus Casino enquiry. We have received your details for <strong>${safe.eventDate}</strong> and will be in touch to confirm availability and provide a quote.</p><p>There is no payment or booking commitment at this stage.</p><p>Iocus Casino</p>`;
 
   const results = await Promise.allSettled([
-    sendEmail(apiKey, { from, to: [ownerEmail], reply_to: data.email, subject: `New Iocus Casino enquiry — ${data.name}, ${data.eventDate}`, html: ownerHtml, text: ownerText }, `iocus-owner-${enquiryId}`),
+    sendEmail(apiKey, { from, to: [ownerEmail], reply_to: data.email, subject: `New Iocus Casino enquiry — ${data.name}, ${eventDate}`, html: ownerHtml, text: ownerText }, `iocus-owner-${enquiryId}`),
     sendEmail(apiKey, { from, to: [data.email], subject: "We’ve received your Iocus Casino enquiry", html: customerHtml, text: customerText }, `iocus-customer-${enquiryId}`),
   ]);
   return results.every((result) => result.status === "fulfilled");
