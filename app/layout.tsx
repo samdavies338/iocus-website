@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = "Hire ready-to-use blackjack, poker and roulette tables in East Devon, with chips, accessories and printed hosting guides. No croupier needed.";
   return {
     metadataBase: new URL(origin), title, description,
-    icons: { icon: "/favicon.svg" },
+    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: { title, description, type: "website", images: [{ url: `${origin}/og.png`, width: 1200, height: 630, alt: "IOCUS — Host the casino night yourself." }] },
     twitter: { card: "summary_large_image", title, description, images: [`${origin}/og.png`] },
   };

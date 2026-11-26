@@ -40,6 +40,13 @@ type EmailMessage = {
   reply_to?: string;
 };
 
+const packageGameCounts: Record<string, number> = {
+  "Single Package": 1,
+  "Night Package": 2,
+  "Full House Package": 3,
+};
+const availableGames = new Set(["Blackjack", "Poker", "Roulette"]);
+
 const escapeHtml = (value: unknown) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -109,6 +116,12 @@ export async function POST(request: Request) {
       guestCount: Number(raw.guestCount) || 0, notes: String(raw.notes || "").trim(),
       name: String(raw.name).trim(), email: String(raw.email).trim(), phone: String(raw.phone).trim(),
     };
+
+    const requiredGameCount = packageGameCounts[data.packageName];
+    const uniqueGames = new Set(data.games);
+    if (!requiredGameCount || uniqueGames.size !== data.games.length || data.games.length !== requiredGameCount || data.games.some((game) => !availableGames.has(game))) {
+      return Response.json({ error: "Please select the correct number of tables for your package." }, { status: 400 });
+    }
 
     await env.DB.prepare(createTableSql).run();
     const result = await env.DB.prepare(`INSERT INTO enquiries (created_at, event_type, package_name, fulfilment, games, event_date, start_time, venue, guest_count, notes, name, email, phone)
