@@ -1,20 +1,19 @@
 import { and, count, desc, eq, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { enquiries, enquiryDecisions } from "../../../../db/schema";
+import { enquiries, enquiryDecisions, enquiryReminders } from "../../../../db/schema";
 import { getAdminAccess } from "../../../admin/access";
 import { decisionEmail } from "../../../admin/decision-email";
+import { notificationState, RETRY_WINDOW_MS, SEND_LEASE_MS } from "../../../admin/email-status";
 import type { DashboardEnquiry, EnquiryPage } from "../../../admin/types";
 import { readGames } from "../../../enquiry-format";
+import { bookingConfirmation } from "../../../enquiry-confirmation";
 import { getEnquiryMailConfig, sendEmail } from "../../../enquiry-mail";
+import { getPackageTerms, parsePriceInPence } from "../../../package-terms";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 25;
-const SEND_LEASE_MS = 60_000;
-// Leave a margin inside Resend's 24-hour deduplication window.
-const RETRY_WINDOW_MS = 23 * 60 * 60 * 1000;
 const decision = enquiryDecisions;
-type DecisionRow = typeof decision.$inferSelect;
 
 function json(data: unknown, status = 200) {
   return Response.json(data, {
@@ -24,16 +23,6 @@ function json(data: unknown, status = 200) {
       "X-Robots-Tag": "noindex, nofollow",
     },
   });
-}
-
-function notificationState(row: DecisionRow): NonNullable<DashboardEnquiry["decision"]>["notification"] {
-  if (row.emailSentAt) return "sent";
-  if (row.firstAttemptAt && Date.parse(row.firstAttemptAt) <= Date.now() - RETRY_WINDOW_MS) {
-    return "expired";
-  }
-  if (row.emailFailedAt) return "failed";
-  if (!row.lastAttemptAt) return "pending";
-  return Date.parse(row.lastAttemptAt) > Date.now() - SEND_LEASE_MS ? "sending" : "failed";
 }
 
 export async function GET(request: Request) {
@@ -61,9 +50,10 @@ export async function GET(request: Request) {
     const page = Number.isSafeInteger(requestedPage) ? Math.max(1, Math.min(requestedPage, totalPages)) : 1;
     const where = activeFilter === "new" ? isNull(decision.enquiryId)
       : activeFilter === "all" ? undefined : eq(decision.status, activeFilter);
-    const rows = await db.select({ record: enquiries, outcome: decision })
+    const rows = await db.select({ record: enquiries, outcome: decision, reminder: enquiryReminders })
       .from(enquiries)
       .leftJoin(decision, eq(decision.enquiryId, enquiries.id))
+      .leftJoin(enquiryReminders, eq(enquiryReminders.enquiryId, enquiries.id))
       .where(where)
       .orderBy(desc(enquiries.id))
       .limit(PAGE_SIZE)
@@ -71,7 +61,7 @@ export async function GET(request: Request) {
 
     return json({
       counts, totalPages, page,
-      enquiries: rows.map(({ record, outcome }) => ({
+      enquiries: rows.map(({ record, outcome, reminder }): DashboardEnquiry => ({
         ...record,
         games: readGames(record.games),
         status: outcome?.status ?? "new",
@@ -81,6 +71,7 @@ export async function GET(request: Request) {
           customerNote: outcome.customerNote,
           notification: notificationState(outcome),
         } : null,
+        reminder: reminder ? { notification: notificationState(reminder), sentAt: reminder.emailSentAt } : null,
       })),
     } satisfies EnquiryPage);
   } catch {
@@ -100,13 +91,14 @@ export async function PATCH(request: Request) {
     return json({ error: "Expected a JSON request." }, 415);
   }
 
-  const raw = await request.json().catch(() => null) as { id?: unknown; action?: unknown; customerNote?: unknown } | null;
+  const raw = await request.json().catch(() => null) as { id?: unknown; action?: unknown; customerNote?: unknown; deliveryFee?: unknown } | null;
   const id = raw?.id;
   const action = raw?.action;
   const inputNote = raw?.customerNote ?? "";
+  const inputFee = raw?.deliveryFee ?? "";
   if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 1 ||
       (action !== "booked" && action !== "rejected" && action !== "retry") ||
-      typeof inputNote !== "string" || inputNote.length > 1500) {
+      typeof inputNote !== "string" || inputNote.length > 1500 || typeof inputFee !== "string") {
     return json({ error: "Choose a valid enquiry and action, with a note of up to 1,500 characters." }, 400);
   }
   const { apiKey, from, ownerEmail } = getEnquiryMailConfig();
@@ -118,12 +110,21 @@ export async function PATCH(request: Request) {
     if (!record) return json({ error: "This enquiry could not be found." }, 404);
 
     if (action !== "retry") {
+      const booking = action === "booked";
+      const packageTerms = booking ? getPackageTerms(record.packageName ?? "") : undefined;
+      const fee = inputFee.trim() ? parsePriceInPence(inputFee.trim()) : null;
+      if (booking && inputFee.trim() && fee === null) {
+        return json({ error: "Enter the delivery fee in pounds and pence, for example 35.00." }, 400);
+      }
       const [created] = await db.insert(decision).values({
         enquiryId: id,
         status: action,
         decidedAt: new Date().toISOString(),
         decidedBy: access.user.email,
         customerNote: inputNote.trim(),
+        packagePricePence: packageTerms ? parsePriceInPence(packageTerms.price.slice(1)) : null,
+        deliveryFeePence: booking && record.fulfilment === "Collection" ? 0 : booking ? fee : null,
+        bookingTemplateVersion: booking ? 2 : null,
       }).onConflictDoNothing().returning({ id: decision.enquiryId });
       if (!created) return json({ error: "This enquiry has already been decided. Refresh to see its current status." }, 409);
     }
@@ -151,9 +152,13 @@ export async function PATCH(request: Request) {
     }
 
     try {
+      // Keep a previously attempted payload stable for Resend retries.
+      const message = claimed.status === "booked" && claimed.bookingTemplateVersion === 2
+        ? bookingConfirmation(record, claimed.packagePricePence, claimed.deliveryFeePence, claimed.customerNote)
+        : decisionEmail(record, claimed.status, claimed.customerNote);
       await sendEmail(apiKey, {
         from, to: [record.email], reply_to: ownerEmail,
-        ...decisionEmail(record, claimed.status, claimed.customerNote),
+        ...message,
       }, `iocus-decision-${id}-${claimed.status}`);
     } catch {
       await db.update(decision).set({ emailFailedAt: new Date().toISOString() })

@@ -91,7 +91,9 @@
 .admin-outcome p, .admin-decision p { margin: 0 0 .5rem; }
 .admin-decision h2 { margin: 0 0 .4rem; font-size: 1.25rem; }
 .admin-decision label { display: grid; gap: .35rem; margin: .8rem 0; font-weight: 700; }
-.admin-decision textarea { width: 100%; padding: .6rem; background: var(--paper); border: 1px solid #ae9f8d; border-radius: 4px; font-weight: 400; resize: vertical; }
+.admin-decision :is(textarea, input) { width: 100%; padding: .6rem; background: var(--paper); border: 1px solid #ae9f8d; border-radius: 4px; font-weight: 400; }
+.admin-decision textarea { resize: vertical; }
+.admin-decision small { font-size: .875rem; font-weight: 400; color: var(--muted); }
 .admin-pagination { justify-content: center; margin-top: 1.25rem; }
 
 @media (max-width: 540px) {

@@ -15,6 +15,11 @@ export function formatLongEventDate(value: string) {
   return `${day}${suffix} ${monthName.format(date)} ${date.getUTCFullYear()}`;
 }
 
+export function isUpcomingEvent(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    value >= new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeZone: "Europe/London" }).format(new Date());
+}
+
 export function readGames(value: string): string[] {
   try {
     const parsed: unknown = JSON.parse(value);

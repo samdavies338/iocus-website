@@ -2,6 +2,7 @@ export const enquiryStatuses = ["new", "booked", "rejected"] as const;
 export type EnquiryStatus = (typeof enquiryStatuses)[number];
 export type DecisionStatus = Exclude<EnquiryStatus, "new">;
 export type EnquiryFilter = EnquiryStatus | "all";
+type NotificationStatus = "pending" | "sending" | "failed" | "sent" | "expired";
 
 export type DashboardEnquiry = {
   id: number;
@@ -23,8 +24,9 @@ export type DashboardEnquiry = {
     decidedAt: string;
     decidedBy: string;
     customerNote: string;
-    notification: "pending" | "sending" | "failed" | "sent" | "expired";
+    notification: NotificationStatus;
   } | null;
+  reminder: { notification: NotificationStatus; sentAt: string | null } | null;
 };
 
 export type EnquiryPage = {
