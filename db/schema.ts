@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const enquiries = sqliteTable("enquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -30,4 +30,21 @@ export const enquiryDecisions = sqliteTable("enquiry_decisions", {
   emailFailedAt: text("email_failed_at"),
 }, (table) => [
   check("enquiry_decision_status", sql`${table.status} IN ('booked', 'rejected')`),
+]);
+
+export const adminLoginLinks = sqliteTable("admin_login_links", {
+  email: text("email").primaryKey(),
+  tokenHash: text("token_hash").unique(),
+  expiresAt: integer("expires_at").notNull(),
+  requestedAt: integer("requested_at").notNull(),
+  windowStartedAt: integer("window_started_at").notNull(),
+  requestsInWindow: integer("requests_in_window").notNull(),
+});
+
+export const adminSessions = sqliteTable("admin_sessions", {
+  tokenHash: text("token_hash").primaryKey(),
+  email: text("email").notNull(),
+  expiresAt: integer("expires_at").notNull(),
+}, (table) => [
+  index("admin_session_email_expiry").on(table.email, table.expiresAt),
 ]);

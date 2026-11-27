@@ -41,7 +41,7 @@ const worker = {
     }
 
     const response = await handler.fetch(request, env, ctx);
-    if (url.pathname === "/admin" || url.pathname === "/admin/" || url.pathname.startsWith("/api/admin/")) {
+    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/") || url.pathname.startsWith("/api/admin/")) {
       const headers = new Headers(response.headers);
       headers.set("Cache-Control", "private, no-store, max-age=0");
       headers.set("X-Robots-Tag", "noindex, nofollow");
