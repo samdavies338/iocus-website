@@ -58,7 +58,7 @@ Enquiries are always saved to the database. To also send an owner notification a
 
 ## Staff dashboard
 
-Set `ENQUIRY_ADMIN_EMAILS` in Sites to a comma-separated list of authorised staff ChatGPT account email addresses, then publish the updated environment. When the list is empty, access is denied to everyone.
+Set `ENQUIRY_ADMIN_EMAILS` in Sites to a comma-separated list of authorised staff email addresses, then publish the updated environment. When the list is empty, access is denied to everyone. Staff use the email sign-in form at `https://iocuscasino.com/admin`. Each link is single use and expires in 15 minutes. The dashboard stays signed in for up to seven days on that browser, or until staff sign out.
 
 Past and incoming requests appear as New until a member of staff approves or declines them. Each decision is recorded once, with its date and staff account. If Resend cannot confirm a decision email, staff can retry it from the enquiry while the original send is inside the deduplication window.
 

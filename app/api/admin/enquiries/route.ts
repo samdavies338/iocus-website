@@ -39,7 +39,7 @@ function notificationState(row: DecisionRow): NonNullable<DashboardEnquiry["deci
 export async function GET(request: Request) {
   const access = await getAdminAccess();
   if (access.status !== "allowed") {
-    return json({ error: "Staff sign-in required." }, access.status === "signed-out" ? 401 : 403);
+    return json({ error: "Staff sign-in required." }, 401);
   }
 
   try {
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const access = await getAdminAccess();
   if (access.status !== "allowed") {
-    return json({ error: "Staff sign-in required." }, access.status === "signed-out" ? 401 : 403);
+    return json({ error: "Staff sign-in required." }, 401);
   }
   if (request.headers.get("origin") !== new URL(request.url).origin) {
     return json({ error: "Open the dashboard directly to make changes." }, 403);
