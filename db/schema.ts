@@ -28,9 +28,22 @@ export const enquiryDecisions = sqliteTable("enquiry_decisions", {
   lastAttemptAt: text("last_attempt_at"),
   emailSentAt: text("email_sent_at"),
   emailFailedAt: text("email_failed_at"),
+  packagePricePence: integer("package_price_pence"),
+  deliveryFeePence: integer("delivery_fee_pence"),
+  bookingTemplateVersion: integer("booking_template_version"),
 }, (table) => [
   check("enquiry_decision_status", sql`${table.status} IN ('booked', 'rejected')`),
 ]);
+
+export const enquiryReminders = sqliteTable("enquiry_reminders", {
+  enquiryId: integer("enquiry_id").primaryKey().references(() => enquiryDecisions.enquiryId),
+  delivery: text("delivery").notNull(),
+  collection: text("collection").notNull(),
+  firstAttemptAt: text("first_attempt_at"),
+  lastAttemptAt: text("last_attempt_at"),
+  emailSentAt: text("email_sent_at"),
+  emailFailedAt: text("email_failed_at"),
+});
 
 export const adminLoginLinks = sqliteTable("admin_login_links", {
   email: text("email").primaryKey(),
