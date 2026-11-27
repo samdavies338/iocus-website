@@ -71,7 +71,11 @@ export async function GET(request: Request) {
           customerNote: outcome.customerNote,
           notification: notificationState(outcome),
         } : null,
-        reminder: reminder ? { notification: notificationState(reminder), sentAt: reminder.emailSentAt } : null,
+        reminder: reminder ? {
+          notification: notificationState(reminder), sentAt: reminder.emailSentAt,
+          eventDate: reminder.message?.eventDate ?? record.eventDate,
+          to: reminder.message?.to ?? record.email,
+        } : null,
       })),
     } satisfies EnquiryPage);
   } catch {
@@ -124,7 +128,7 @@ export async function PATCH(request: Request) {
         customerNote: inputNote.trim(),
         packagePricePence: packageTerms ? parsePriceInPence(packageTerms.price.slice(1)) : null,
         deliveryFeePence: booking && record.fulfilment === "Collection" ? 0 : booking ? fee : null,
-        bookingTemplateVersion: booking ? 2 : null,
+        bookingTemplateVersion: booking ? 3 : null,
       }).onConflictDoNothing().returning({ id: decision.enquiryId });
       if (!created) return json({ error: "This enquiry has already been decided. Refresh to see its current status." }, 409);
     }
@@ -153,8 +157,9 @@ export async function PATCH(request: Request) {
 
     try {
       // Keep a previously attempted payload stable for Resend retries.
-      const message = claimed.status === "booked" && claimed.bookingTemplateVersion === 2
-        ? bookingConfirmation(record, claimed.packagePricePence, claimed.deliveryFeePence, claimed.customerNote)
+      const templateVersion = claimed.bookingTemplateVersion;
+      const message = claimed.status === "booked" && (templateVersion === 2 || templateVersion === 3)
+        ? bookingConfirmation(record, claimed.packagePricePence, claimed.deliveryFeePence, claimed.customerNote, templateVersion === 3)
         : decisionEmail(record, claimed.status, claimed.customerNote);
       await sendEmail(apiKey, {
         from, to: [record.email], reply_to: ownerEmail,

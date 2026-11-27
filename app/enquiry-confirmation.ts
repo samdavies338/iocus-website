@@ -1,6 +1,7 @@
 import { formatLongEventDate, readGames } from "./enquiry-format";
 import { escapeHtml } from "./enquiry-mail";
 import { securityDepositPence } from "./package-terms";
+import type { ReminderDetails } from "./reminder-details";
 
 type EventDetails = {
   name: string;
@@ -130,23 +131,22 @@ function money(value: number | null) {
 export function enquiryConfirmation(data: EventDetails, price: string) {
   const { games, date, guests, tables, eventType, fulfilment } = eventInfo(data);
   const soloGame = games.length === 1 ? games[0] : undefined;
-  const event = soloGame ? `${soloGame} Night` : "casino night";
   const tableDescription = soloGame ? `one ${soloGame} table` : `${games.length} tables (${tables})`;
-  return renderEmail(data, `Thank you for getting in touch with IOCUS Casino. We’d be delighted to help make your ${event} on ${date} a great night.`, [
+  return renderEmail(data, "Thank you for getting in touch about hiring casino tables from IOCUS Casino. We’ve received your enquiry and will review your details and get back to you shortly.", [
     { title: "YOUR DETAILS", rows: [
       ["Event", eventType], ["Date", date], ["Guests", guests], ["Package", data.packageName ?? "To be confirmed"],
       ["Tables", tables], ["Venue", data.venue], ["Delivery/Collection", fulfilment],
     ] },
-    { title: "YOUR CASINO NIGHT", text: `Your ${data.packageName} is ${price} and includes ${tableDescription}. IOCUS Casino is designed to let you host the casino night yourself. We supply ready-to-use tables, chips, equipment and straightforward printed hosting guides.` },
+    { title: "YOUR CASINO NIGHT", text: `The ${data.packageName} you enquired about costs ${price} and includes ${tableDescription}. IOCUS Casino is designed to let you host the casino night yourself. We supply ready-to-use tables, chips, equipment and straightforward printed hosting guides.` },
     { title: "NO CROUPIER. NO COMPLICATED SETUP.", text: "Just a brilliant night ready to play. You choose the hosts, set out the chips and let the games begin." },
-    { title: "YOUR QUOTE", rows: [
+    { title: "ESTIMATED HIRE COSTS", rows: [
       ["Package", price], ["Delivery & collection", data.fulfilment === "Collection" ? "£0.00" : "To be quoted"],
       ["Refundable security deposit", "£250"],
-    ], text: "We’ll confirm availability and your final quote by email. No payment is due at this stage." },
-  ]);
+    ], text: "We’ll check availability and follow up with your final quote." },
+  ], undefined, "This email confirms receipt of your enquiry only. Any booking will be confirmed separately. No payment is due at this stage.");
 }
 
-export function bookingConfirmation(data: EventDetails, packagePrice: number | null, deliveryFee: number | null, note: string) {
+export function bookingConfirmation(data: EventDetails, packagePrice: number | null, deliveryFee: number | null, note: string, selfHosted: boolean) {
   const { date, eventType, guests, tables, fulfilment } = eventInfo(data);
   const total = packagePrice === null || deliveryFee === null ? null : packagePrice + deliveryFee + securityDepositPence;
   return {
@@ -161,20 +161,20 @@ export function bookingConfirmation(data: EventDetails, packagePrice: number | n
         ["Package", money(packagePrice)], ["Delivery & collection", money(deliveryFee)],
         ["Refundable security deposit", money(securityDepositPence)], ["Total including deposit", money(total)],
       ], text: "We’ll be in touch to confirm payment and handover arrangements." },
-      { title: "YOUR NIGHT. YOUR TABLES. YOUR RULES.", text: "Our simple guides show you how to set up and run the games, and guests can take turns being the host." },
+      { title: "YOUR NIGHT. YOUR TABLES. YOUR RULES.", text: selfHosted
+        ? "Your casino night is self-hosted, with no croupiers provided. The printed guides show you and your guests how to set up and run each game, so everyone can take turns hosting."
+        : "Our simple guides show you how to set up and run the games, and guests can take turns being the host." },
     ], "Booking confirmed!", note),
   };
 }
 
-export function preEventReminder(data: EventDetails, delivery: string, collection: string) {
+function renderReminder(data: EventDetails, handoverRows: DetailRow[], extraDetails: DetailRow[] = []) {
   const { date, guests, tables } = eventInfo(data);
   return {
     subject: `Your Iocus Casino event on ${date}`,
     ...renderEmail(data, `We’re getting in touch ahead of your event on ${date} to confirm the arrangements and help you get ready for your IOCUS Casino night.`, [
       { title: "YOUR DETAILS", rows: [
-        ["Date", date], ["Venue", data.venue], ["Guests", guests], ["Tables", tables],
-        ["Delivery", delivery || (data.fulfilment === "Collection" ? "Self-collection" : "To be arranged")],
-        ["Collection", collection || "To be arranged"],
+        ["Date", date], ["Venue", data.venue], ["Guests", guests], ["Tables", tables], ...extraDetails, ...handoverRows,
       ] },
       { title: "BEFORE YOUR GUESTS ARRIVE", items: [
         "Make sure there is enough space for the tables.",
@@ -186,4 +186,21 @@ export function preEventReminder(data: EventDetails, delivery: string, collectio
       { title: "THE GAMES", text: tables },
     ], "Your casino night is nearly here!"),
   };
+}
+
+export function reviewedPreEventReminder(data: ReminderDetails) {
+  const details: DetailRow[] = [["Event", data.eventType]];
+  if (data.startTime) details.push(["Event start time", data.startTime]);
+  if (data.packageName) details.push(["Package", data.packageName]);
+  if (data.phone) details.push(["Contact phone", data.phone]);
+  const label = data.handover === "delivery" ? "Delivery arrangements" : "Self-collection arrangements";
+  return renderReminder({ ...data, fulfilment: null }, [[label, data.arrangements]], details);
+}
+
+// Preserve the exact body for retries of reminders created before the review form.
+export function legacyPreEventReminder(data: EventDetails, delivery: string, collection: string) {
+  return renderReminder(data, [
+    ["Delivery", delivery || (data.fulfilment === "Collection" ? "Self-collection" : "To be arranged")],
+    ["Collection", collection || "To be arranged"],
+  ]);
 }

@@ -26,7 +26,7 @@ export type DashboardEnquiry = {
     customerNote: string;
     notification: NotificationStatus;
   } | null;
-  reminder: { notification: NotificationStatus; sentAt: string | null } | null;
+  reminder: { notification: NotificationStatus; sentAt: string | null; eventDate: string; to: string } | null;
 };
 
 export type EnquiryPage = {
