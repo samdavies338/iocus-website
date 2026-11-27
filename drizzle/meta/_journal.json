@@ -15,6 +15,13 @@
       "when": 1785787818713,
       "tag": "0001_third_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795787346010,
+      "tag": "0002_concerned_firebrand",
+      "breakpoints": true
     }
   ]
 }

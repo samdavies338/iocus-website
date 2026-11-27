@@ -1,21 +1,6 @@
 import { env } from "cloudflare:workers";
-
-const createTableSql = `CREATE TABLE IF NOT EXISTS enquiries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  created_at TEXT NOT NULL,
-  event_type TEXT NOT NULL,
-  package_name TEXT,
-  fulfilment TEXT,
-  games TEXT NOT NULL,
-  event_date TEXT NOT NULL,
-  start_time TEXT NOT NULL,
-  venue TEXT NOT NULL,
-  guest_count INTEGER NOT NULL,
-  notes TEXT,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT NOT NULL
-)`;
+import { formatEventDate } from "../../enquiry-format";
+import { escapeHtml, getEnquiryMailConfig, sendEmail } from "../../enquiry-mail";
 
 type EnquiryData = {
   eventType: string;
@@ -31,15 +16,6 @@ type EnquiryData = {
   phone: string;
 };
 
-type EmailMessage = {
-  from: string;
-  to: string[];
-  subject: string;
-  html: string;
-  text: string;
-  reply_to?: string;
-};
-
 const packageGameCounts: Record<string, number> = {
   "Single Package": 1,
   "Night Package": 2,
@@ -47,41 +23,12 @@ const packageGameCounts: Record<string, number> = {
 };
 const availableGames = new Set(["Blackjack", "Poker", "Roulette"]);
 
-const escapeHtml = (value: unknown) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#039;");
-
-async function sendEmail(apiKey: string, message: EmailMessage, idempotencyKey: string) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": idempotencyKey,
-    },
-    body: JSON.stringify(message),
-  });
-
-  if (!response.ok) throw new Error(`Email provider returned ${response.status}`);
-}
-
 async function sendEnquiryEmails(data: EnquiryData, enquiryId: string) {
-  const runtimeEnv = env as typeof env & {
-    RESEND_API_KEY?: string;
-    ENQUIRY_FROM_EMAIL?: string;
-    ENQUIRY_TO_EMAIL?: string;
-  };
-  const apiKey = runtimeEnv.RESEND_API_KEY;
-  const from = runtimeEnv.ENQUIRY_FROM_EMAIL;
-  const ownerEmail = runtimeEnv.ENQUIRY_TO_EMAIL;
+  const { apiKey, from, ownerEmail } = getEnquiryMailConfig();
 
   if (!apiKey || !from || !ownerEmail) return false;
 
-  // Reorder the date-only form value without introducing a time zone.
-  const eventDate = data.eventDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$3-$2-$1");
+  const eventDate = formatEventDate(data.eventDate);
   const safe = {
     name: escapeHtml(data.name), email: escapeHtml(data.email), phone: escapeHtml(data.phone),
     eventType: escapeHtml(data.eventType), packageName: escapeHtml(data.packageName),
@@ -125,7 +72,6 @@ export async function POST(request: Request) {
       return Response.json({ error: "Please select the correct number of tables for your package." }, { status: 400 });
     }
 
-    await env.DB.prepare(createTableSql).run();
     const result = await env.DB.prepare(`INSERT INTO enquiries (created_at, event_type, package_name, fulfilment, games, event_date, start_time, venue, guest_count, notes, name, email, phone)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(new Date().toISOString(), data.eventType, data.packageName, data.fulfilment, JSON.stringify(data.games), data.eventDate, "", data.venue, data.guestCount, data.notes, data.name, data.email, data.phone)
