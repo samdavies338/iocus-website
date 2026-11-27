@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { packageTerms } from "./package-terms";
 
 const games = [
   { suit: "♠", name: "Blackjack", kicker: "Beat the dealer", includes: "Blackjack table, card shoe, cards, chips and quick-start guide.", tone: "black" },
@@ -16,9 +17,9 @@ const gallery = [
 ];
 
 const packages = [
-  { id: "single", name: "Single", price: "£95", gameCount: 1, gameLabel: "1 game table", label: "For smaller gatherings", description: "One ready-to-use game table with its accessories, chips and a clear printed guide.", includes: ["Choose any one game", "500 chips included", "Accessories + printed guide"] },
-  { id: "night", name: "Night", price: "£160", gameCount: 2, gameLabel: "2 game tables", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment for a medium-sized event.", includes: ["Choose any two games", "1,000 chips included", "Printed hosting guides"] },
-  { id: "full", name: "Full House", price: "£200", gameCount: 3, gameLabel: "All 3 game tables", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "1,000 chips included", "Full printed guides"] },
+  { id: "single", name: "Single", ...packageTerms["Single Package"], gameLabel: "1 game table", label: "For smaller gatherings", description: "One ready-to-use game table with its accessories, chips and a clear printed guide.", includes: ["Choose any one game", "500 chips included", "Accessories + printed guide"] },
+  { id: "night", name: "Night", ...packageTerms["Night Package"], gameLabel: "2 game tables", label: "The crowd-pleaser", description: "Two different game tables with enough chips and equipment for a medium-sized event.", includes: ["Choose any two games", "1,000 chips included", "Printed hosting guides"] },
+  { id: "full", name: "Full House", ...packageTerms["Full House Package"], gameLabel: "All 3 game tables", label: "The full experience", description: "All three available tables and their equipment for larger parties, weddings and corporate events.", includes: ["Blackjack, poker + roulette", "1,000 chips included", "Full printed guides"] },
 ];
 
 const faqs = [
