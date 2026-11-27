@@ -36,6 +36,13 @@
       "when": 1795807065130,
       "tag": "0004_giant_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795808799814,
+      "tag": "0005_majestic_guardian",
+      "breakpoints": true
     }
   ]
 }

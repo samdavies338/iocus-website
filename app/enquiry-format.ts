@@ -16,7 +16,9 @@ export function formatLongEventDate(value: string) {
 }
 
 export function isUpcomingEvent(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  const date = new Date(`${value}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(date.valueOf()) &&
+    date.toISOString().slice(0, 10) === value &&
     value >= new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeZone: "Europe/London" }).format(new Date());
 }
 

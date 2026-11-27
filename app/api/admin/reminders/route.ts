@@ -3,9 +3,10 @@ import { getDb } from "../../../../db";
 import { enquiries, enquiryDecisions, enquiryReminders } from "../../../../db/schema";
 import { getAdminAccess } from "../../../admin/access";
 import { RETRY_WINDOW_MS, SEND_LEASE_MS } from "../../../admin/email-status";
-import { preEventReminder } from "../../../enquiry-confirmation";
+import { legacyPreEventReminder, reviewedPreEventReminder } from "../../../enquiry-confirmation";
 import { isUpcomingEvent } from "../../../enquiry-format";
 import { getEnquiryMailConfig, sendEmail } from "../../../enquiry-mail";
+import { parseReminderDetails } from "../../../reminder-details";
 
 export const dynamic = "force-dynamic";
 
@@ -21,14 +22,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Expected a JSON request." }, { status: 415 });
   }
 
-  const raw = await request.json().catch(() => null) as { id?: unknown; retry?: unknown; delivery?: unknown; collection?: unknown } | null;
+  const raw = await request.json().catch(() => null) as { id?: unknown; retry?: unknown; details?: unknown } | null;
   const id = raw?.id;
-  const delivery = raw?.delivery ?? "";
-  const collection = raw?.collection ?? "";
-  if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 1 ||
-      typeof delivery !== "string" || delivery.length > 500 ||
-      typeof collection !== "string" || collection.length > 500) {
-    return Response.json({ error: "Specify a booking and keep each handover detail under 500 characters." }, { status: 400 });
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 1) {
+    return Response.json({ error: "Choose a valid booking." }, { status: 400 });
   }
   const { apiKey, from, ownerEmail } = getEnquiryMailConfig();
   if (!apiKey || !from || !ownerEmail) return Response.json({ error: "Email is unavailable. Please try again later." }, { status: 503 });
@@ -38,17 +35,25 @@ export async function POST(request: Request) {
     const [booking] = await db.select({ enquiry: enquiries, decision: enquiryDecisions }).from(enquiries)
       .innerJoin(enquiryDecisions, eq(enquiryDecisions.enquiryId, enquiries.id))
       .where(eq(enquiries.id, id));
-    if (!booking || booking.decision.status !== "booked" || !booking.decision.emailSentAt || !isUpcomingEvent(booking.enquiry.eventDate)) {
-      return Response.json({ error: "Reminders are available for upcoming bookings once the confirmation email has been sent." }, { status: 409 });
+    if (!booking || booking.decision.status !== "booked" || !booking.decision.emailSentAt) {
+      return Response.json({ error: "Send the booking confirmation before preparing a reminder." }, { status: 409 });
     }
 
-    if (raw?.retry !== true) {
-      const selfCollection = booking.enquiry.fulfilment === "Collection";
-      if (!collection.trim() || (!selfCollection && !delivery.trim())) {
-        return Response.json({ error: "Enter the agreed handover arrangements before sending." }, { status: 400 });
+    if (raw?.retry === true) {
+      const [previous] = await db.select({ message: reminders.message }).from(reminders).where(eq(reminders.enquiryId, id));
+      if (!previous || !isUpcomingEvent(previous.message?.eventDate ?? booking.enquiry.eventDate)) {
+        return Response.json({ error: "There is no saved reminder to retry for an upcoming event." }, { status: 409 });
+      }
+    } else {
+      const details = parseReminderDetails(raw?.details);
+      if (!details) {
+        return Response.json({ error: "Check the name, email, event date, guest count, selected tables and handover details." }, { status: 400 });
       }
       const [created] = await db.insert(reminders).values({
-        enquiryId: id, delivery: selfCollection ? "" : delivery.trim(), collection: collection.trim(),
+        enquiryId: id,
+        delivery: details.handover === "delivery" ? details.arrangements : "",
+        collection: details.handover === "collection" ? details.arrangements : "",
+        message: { to: details.email, eventDate: details.eventDate, ...reviewedPreEventReminder(details) },
       }).onConflictDoNothing().returning({ id: reminders.enquiryId });
       if (!created) {
         return Response.json({ error: "A reminder already exists for this booking. Refresh to see its email status." }, { status: 409 });
@@ -73,9 +78,12 @@ export async function POST(request: Request) {
 
     const currentAttempt = and(eq(reminders.enquiryId, id), eq(reminders.lastAttemptAt, attemptedAt));
     try {
+      const { to, subject, text, html } = claimed.message ?? {
+        to: booking.enquiry.email,
+        ...legacyPreEventReminder(booking.enquiry, claimed.delivery, claimed.collection),
+      };
       await sendEmail(apiKey, {
-        from, to: [booking.enquiry.email], reply_to: ownerEmail,
-        ...preEventReminder(booking.enquiry, claimed.delivery, claimed.collection),
+        from, to: [to], reply_to: ownerEmail, subject, text, html,
       }, `iocus-pre-event-${id}`);
     } catch {
       await db.update(reminders).set({ emailFailedAt: new Date().toISOString() }).where(currentAttempt);

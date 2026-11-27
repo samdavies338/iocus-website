@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import type { ReminderMessage } from "../app/reminder-details";
 
 export const enquiries = sqliteTable("enquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -39,6 +40,7 @@ export const enquiryReminders = sqliteTable("enquiry_reminders", {
   enquiryId: integer("enquiry_id").primaryKey().references(() => enquiryDecisions.enquiryId),
   delivery: text("delivery").notNull(),
   collection: text("collection").notNull(),
+  message: text("message", { mode: "json" }).$type<ReminderMessage>(),
   firstAttemptAt: text("first_attempt_at"),
   lastAttemptAt: text("last_attempt_at"),
   emailSentAt: text("email_sent_at"),

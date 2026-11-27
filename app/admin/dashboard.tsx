@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { formatEventDate, isUpcomingEvent } from "../enquiry-format";
+import type { ReminderDetails } from "../reminder-details";
+import { ReminderReview } from "./reminder-review";
 import { enquiryStatuses, type DashboardEnquiry, type DecisionStatus, type EnquiryFilter, type EnquiryPage } from "./types";
 
 const filters = ["all", ...enquiryStatuses] as const;
@@ -14,8 +16,8 @@ const notificationLabels = {
   expired: "Check email in Resend",
 };
 type EnquiryAction = DecisionStatus | "retry" | "reminder" | "retry-reminder";
-type ActionDetails = { customerNote?: string; deliveryFee?: string; delivery?: string; collection?: string };
-type UpdateEnquiry = (id: number, action: EnquiryAction, details?: ActionDetails) => Promise<boolean>;
+type ActionDetails = { customerNote?: string; deliveryFee?: string; details?: ReminderDetails };
+type UpdateEnquiry = (id: number, action: EnquiryAction, details?: ActionDetails) => Promise<string | null>;
 
 const receivedDate = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium",
@@ -82,10 +84,11 @@ export function Dashboard() {
           ? `Enquiry #${id} is ${result.status}. Resend accepted the customer email.`
           : `Enquiry #${id} is ${result.status}. The email could not be confirmed. You can retry it from the enquiry.`);
       }
-      return true;
+      return null;
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : "Could not confirm the change.");
-      return false;
+      const message = error instanceof Error ? error.message : "Could not confirm the change.";
+      setFeedback(message);
+      return message;
     } finally {
       setSaving(null);
       refresh();
@@ -179,7 +182,7 @@ function EnquiryCard({ enquiry, busy, saving, update }: {
           <form className="admin-decision" onSubmit={async (event) => {
             event.preventDefault();
             if (busy) return;
-            if (await update(enquiry.id, action, { customerNote: note, deliveryFee })) {
+            if (!(await update(enquiry.id, action, { customerNote: note, deliveryFee }))) {
               setAction(null);
               setNote("");
               setDeliveryFee("");
@@ -220,12 +223,7 @@ function ReminderPanel({ enquiry, busy, saving, update }: {
   saving: boolean;
   update: UpdateEnquiry;
 }) {
-  const [open, setOpen] = useState(false);
-  const [delivery, setDelivery] = useState("");
-  const [collection, setCollection] = useState("");
   const reminder = enquiry.reminder;
-  const upcoming = isUpcomingEvent(enquiry.eventDate);
-  if (!upcoming && !reminder) return null;
 
   return (
     <section className="admin-decision" aria-label="Pre-event reminder">
@@ -233,32 +231,16 @@ function ReminderPanel({ enquiry, busy, saving, update }: {
       {reminder ? (
         <>
           <p>{reminder.sentAt ? `Email accepted by Resend on ${formatTimestamp(reminder.sentAt)}` : notificationLabels[reminder.notification]}</p>
-          {upcoming && (reminder.notification === "failed" || reminder.notification === "pending") && (
+          <p>Prepared for {reminder.to} for the event on {formatEventDate(reminder.eventDate)}.</p>
+          {isUpcomingEvent(reminder.eventDate) && (reminder.notification === "failed" || reminder.notification === "pending") && (
             <button className="admin-button" disabled={busy} onClick={() => void update(enquiry.id, "retry-reminder")}>
               {saving ? "Sending…" : "Retry reminder email"}
             </button>
           )}
         </>
-      ) : open ? (
-        <form onSubmit={async (event) => {
-          event.preventDefault();
-          if (busy) return;
-          if (await update(enquiry.id, "reminder", { delivery, collection })) setOpen(false);
-        }}>
-          <p>Confirm the handover details before sending an email to {enquiry.email}.</p>
-          {enquiry.fulfilment !== "Collection" && <label>Delivery time and arrangements
-            <textarea required rows={2} maxLength={500} value={delivery} onChange={(event) => setDelivery(event.target.value)} disabled={busy} />
-          </label>}
-          <label>{enquiry.fulfilment === "Collection" ? "Pickup and return arrangements" : "Collection time and arrangements"}
-            <textarea required rows={2} maxLength={500} value={collection} onChange={(event) => setCollection(event.target.value)} disabled={busy} />
-          </label>
-          <div className="admin-actions">
-            <button className="admin-button admin-primary" disabled={busy}>{saving ? "Sending…" : "Send reminder email"}</button>
-            <button type="button" className="admin-button" disabled={busy} onClick={() => setOpen(false)}>Cancel</button>
-          </div>
-        </form>
       ) : (
-        <button className="admin-button" disabled={busy} onClick={() => setOpen(true)}>Prepare reminder</button>
+        <ReminderReview enquiry={enquiry} busy={busy} saving={saving}
+          send={(details) => update(enquiry.id, "reminder", { details })} />
       )}
     </section>
   );

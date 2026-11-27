@@ -1,0 +1,1 @@
+ALTER TABLE `enquiry_reminders` ADD `message` text;
