@@ -25,6 +25,7 @@ Additional chips can be hired in batches of 500 for £25. Party size determines 
 - Enquiry form with package, table, event and fulfilment choices.
 - Persistent enquiry storage using Cloudflare D1.
 - Optional owner and customer email notifications through Resend.
+- Private staff dashboard at `/admin` with enquiry history, status filters and customer decision emails.
 - Public production deployment through OpenAI Sites.
 
 ## Local development
@@ -54,6 +55,12 @@ Enquiries are always saved to the database. To also send an owner notification a
 - `RESEND_API_KEY` — stored as a secret.
 - `ENQUIRY_FROM_EMAIL` — an address on a domain verified with Resend.
 - `ENQUIRY_TO_EMAIL` — the private inbox that receives new enquiries.
+
+## Staff dashboard
+
+Set `ENQUIRY_ADMIN_EMAILS` in Sites to a comma-separated list of authorised staff ChatGPT account email addresses, then publish the updated environment. When the list is empty, access is denied to everyone.
+
+Past and incoming requests appear as New until a member of staff approves or declines them. Each decision is recorded once, with its date and staff account. If Resend cannot confirm a decision email, staff can retry it from the enquiry while the original send is inside the deduplication window.
 
 ## Important business rules
 
