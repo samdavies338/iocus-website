@@ -43,6 +43,13 @@
       "when": 1795808799814,
       "tag": "0005_majestic_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795880233907,
+      "tag": "0006_remarkable_bruce_banner",
+      "breakpoints": true
     }
   ]
 }

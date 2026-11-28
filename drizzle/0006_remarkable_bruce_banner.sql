@@ -1,0 +1,1 @@
+ALTER TABLE `enquiry_decisions` ADD `booking_details` text;

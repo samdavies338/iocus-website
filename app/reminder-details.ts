@@ -25,7 +25,7 @@ export type ReminderMessage = {
   html: string;
 };
 
-export function parseReminderDetails(input: unknown): ReminderDetails | null {
+export function parseReminderDetails(input: unknown, { requireArrangements = true } = {}): ReminderDetails | null {
   if (!input || typeof input !== "object") return null;
   const raw = input as Record<string, unknown>;
   const field = (key: string, limit: number) =>
@@ -44,7 +44,7 @@ export function parseReminderDetails(input: unknown): ReminderDetails | null {
   if (!name || !email || !/^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]+$/.test(email) || phone === null ||
       !eventType || !eventDate || !isUpcomingEvent(eventDate) || startTime === null ||
       (startTime && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(startTime)) ||
-      !venue || packageName === null || !arrangements ||
+      !venue || packageName === null || arrangements === null || (requireArrangements && !arrangements) ||
       typeof guestCount !== "number" || !Number.isSafeInteger(guestCount) || guestCount < 1 || guestCount > 10_000 ||
       !Array.isArray(games) || games.length < 1 || games.length > reminderGames.length ||
       new Set(games).size !== games.length || games.some((game) => !reminderGames.some((allowed) => allowed === game)) ||

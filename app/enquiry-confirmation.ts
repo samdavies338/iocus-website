@@ -146,21 +146,35 @@ export function enquiryConfirmation(data: EventDetails, price: string) {
   ], undefined, "This email confirms receipt of your enquiry only. Any booking will be confirmed separately. No payment is due at this stage.");
 }
 
-export function bookingConfirmation(data: EventDetails, packagePrice: number | null, deliveryFee: number | null, note: string, selfHosted: boolean) {
+export function bookingConfirmation(
+  data: EventDetails,
+  packagePrice: number | null,
+  deliveryFee: number | null,
+  note: string,
+  selfHosted: boolean,
+  reviewed?: ReminderDetails,
+) {
   const { date, eventType, guests, tables, fulfilment } = eventInfo(data);
   const total = packagePrice === null || deliveryFee === null ? null : packagePrice + deliveryFee + securityDepositPence;
+  const rows: DetailRow[] = [
+    ["Event", eventType], ["Date", date], ["Venue", data.venue], ["Guests", guests],
+    ["Package", data.packageName ?? "To be confirmed"], ["Tables", tables],
+    ["Delivery/Collection", reviewed ? (reviewed.handover === "delivery" ? "Delivery" : "Self-collection") : fulfilment],
+  ];
+  if (reviewed?.startTime) rows.push(["Event start time", reviewed.startTime]);
+  if (reviewed?.phone) rows.push(["Contact phone", reviewed.phone]);
+  if (reviewed?.arrangements) rows.push(["Handover arrangements", reviewed.arrangements]);
   return {
     subject: `Iocus Casino booking confirmed for ${date}`,
     ...renderEmail(data, "Thank you for choosing IOCUS Casino. We’re pleased to confirm that your casino night is now booked.", [
-      { title: "YOUR DETAILS", rows: [
-        ["Event", eventType], ["Date", date], ["Venue", data.venue], ["Guests", guests],
-        ["Package", data.packageName ?? "To be confirmed"], ["Tables", tables], ["Delivery/Collection", fulfilment],
-      ] },
+      { title: "YOUR DETAILS", rows },
       { title: "WHAT’S INCLUDED", items: ["Ready-to-use casino tables", "Casino chips and equipment", "Cards and accessories where required", "Printed hosting guides"] },
       { title: "YOUR BOOKING", rows: [
         ["Package", money(packagePrice)], ["Delivery & collection", money(deliveryFee)],
         ["Refundable security deposit", money(securityDepositPence)], ["Total including deposit", money(total)],
-      ], text: "We’ll be in touch to confirm payment and handover arrangements." },
+      ], text: reviewed?.arrangements
+        ? "We’ll be in touch about payment. The agreed handover arrangements are listed above."
+        : "We’ll be in touch to confirm payment and handover arrangements." },
       { title: "YOUR NIGHT. YOUR TABLES. YOUR RULES.", text: selfHosted
         ? "Your casino night is self-hosted, with no croupiers provided. The printed guides show you and your guests how to set up and run each game, so everyone can take turns hosting."
         : "Our simple guides show you how to set up and run the games, and guests can take turns being the host." },
