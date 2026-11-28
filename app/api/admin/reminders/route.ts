@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         return Response.json({ error: "There is no saved reminder to retry for an upcoming event." }, { status: 409 });
       }
     } else {
-      const details = parseReminderDetails(raw?.details);
+      const details = parseReminderDetails(raw?.details ?? booking.decision.bookingDetails);
       if (!details) {
         return Response.json({ error: "Check the name, email, event date, guest count, selected tables and handover details." }, { status: 400 });
       }

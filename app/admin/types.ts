@@ -1,3 +1,5 @@
+import type { ReminderDetails } from "../reminder-details";
+
 export const enquiryStatuses = ["new", "booked", "rejected"] as const;
 export type EnquiryStatus = (typeof enquiryStatuses)[number];
 export type DecisionStatus = Exclude<EnquiryStatus, "new">;
@@ -25,6 +27,7 @@ export type DashboardEnquiry = {
     decidedBy: string;
     customerNote: string;
     notification: NotificationStatus;
+    bookingDetails: ReminderDetails | null;
   } | null;
   reminder: { notification: NotificationStatus; sentAt: string | null; eventDate: string; to: string } | null;
 };

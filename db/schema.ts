@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import type { ReminderMessage } from "../app/reminder-details";
+import type { ReminderDetails, ReminderMessage } from "../app/reminder-details";
 
 export const enquiries = sqliteTable("enquiries", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -32,6 +32,7 @@ export const enquiryDecisions = sqliteTable("enquiry_decisions", {
   packagePricePence: integer("package_price_pence"),
   deliveryFeePence: integer("delivery_fee_pence"),
   bookingTemplateVersion: integer("booking_template_version"),
+  bookingDetails: text("booking_details", { mode: "json" }).$type<ReminderDetails>(),
 }, (table) => [
   check("enquiry_decision_status", sql`${table.status} IN ('booked', 'rejected')`),
 ]);

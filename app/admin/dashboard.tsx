@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatEventDate, isUpcomingEvent } from "../enquiry-format";
 import type { ReminderDetails } from "../reminder-details";
-import { ReminderReview } from "./reminder-review";
+import { EnquiryReview } from "./enquiry-review";
 import { enquiryStatuses, type DashboardEnquiry, type DecisionStatus, type EnquiryFilter, type EnquiryPage } from "./types";
 
 const filters = ["all", ...enquiryStatuses] as const;
@@ -142,30 +142,33 @@ function EnquiryCard({ enquiry, busy, saving, update }: {
   saving: boolean;
   update: UpdateEnquiry;
 }) {
-  const [action, setAction] = useState<DecisionStatus | null>(null);
+  const [declining, setDeclining] = useState(false);
   const [note, setNote] = useState("");
-  const [deliveryFee, setDeliveryFee] = useState("");
-  const date = formatEventDate(enquiry.eventDate);
   const outcome = enquiry.decision;
+  const confirmed = outcome?.bookingDetails;
+  const details = confirmed ?? enquiry;
+  const date = formatEventDate(details.eventDate);
+  const handover = confirmed ? (confirmed.handover === "collection" ? "Self-collection" : "Delivery") : enquiry.fulfilment;
 
   return (
     <details className="admin-enquiry">
       <summary>
-        <span className="admin-enquiry-customer"><strong>{enquiry.name}</strong><span>#{enquiry.id} · {enquiry.eventType}</span></span>
-        <span className="admin-enquiry-event"><strong>{date}</strong><span>{enquiry.packageName ?? "Package not specified"}</span></span>
+        <span className="admin-enquiry-customer"><strong>{details.name}</strong><span>#{enquiry.id} · {details.eventType}</span></span>
+        <span className="admin-enquiry-event"><strong>{date}</strong><span>{details.packageName ?? "Package not specified"}</span></span>
         <span className={`admin-status admin-status-${enquiry.status}`}>{statusLabels[enquiry.status]}</span>
         <span className="admin-chevron" aria-hidden="true" />
       </summary>
       <div className="admin-enquiry-details">
         <dl className="admin-details-grid">
           <div><dt>Received</dt><dd>{formatTimestamp(enquiry.createdAt)}</dd></div>
-          <div><dt>Event date</dt><dd>{date}{enquiry.startTime && ` · ${enquiry.startTime}`}</dd></div>
-          <div><dt>Venue</dt><dd>{enquiry.venue}</dd></div>
-          <div><dt>Guests</dt><dd>{enquiry.guestCount}</dd></div>
-          <div><dt>Tables</dt><dd>{enquiry.games.join(", ")}</dd></div>
-          <div><dt>Collection or delivery</dt><dd>{enquiry.fulfilment ?? "Not specified"}</dd></div>
-          <div><dt>Email</dt><dd>{enquiry.email}</dd></div>
-          <div><dt>Phone</dt><dd>{enquiry.phone}</dd></div>
+          <div><dt>Event date</dt><dd>{date}{details.startTime && ` · ${details.startTime}`}</dd></div>
+          <div><dt>Venue</dt><dd>{details.venue}</dd></div>
+          <div><dt>Guests</dt><dd>{details.guestCount}</dd></div>
+          <div><dt>Tables</dt><dd>{details.games.join(", ")}</dd></div>
+          <div><dt>Collection or delivery</dt><dd>{handover ?? "Not specified"}</dd></div>
+          <div><dt>Email</dt><dd>{details.email}</dd></div>
+          <div><dt>Phone</dt><dd>{details.phone}</dd></div>
+          {confirmed?.arrangements && <div className="admin-full-width"><dt>Agreed handover</dt><dd className="admin-note">{confirmed.arrangements}</dd></div>}
           {enquiry.notes && <div className="admin-full-width"><dt>Customer notes</dt><dd className="admin-note">{enquiry.notes}</dd></div>}
         </dl>
         {outcome ? (
@@ -178,35 +181,28 @@ function EnquiryCard({ enquiry, busy, saving, update }: {
               <button className="admin-button" disabled={busy} onClick={() => void update(enquiry.id, "retry")}>{saving ? "Sending…" : "Retry customer email"}</button>
             )}
           </div>
-        ) : action ? (
+        ) : declining ? (
           <form className="admin-decision" onSubmit={async (event) => {
             event.preventDefault();
             if (busy) return;
-            if (!(await update(enquiry.id, action, { customerNote: note, deliveryFee }))) {
-              setAction(null);
+            if (!(await update(enquiry.id, "rejected", { customerNote: note }))) {
+              setDeclining(false);
               setNote("");
-              setDeliveryFee("");
             }
           }}>
-            <h2>{action === "booked" ? "Approve this booking?" : "Decline this enquiry?"}</h2>
-            <p>This will mark the enquiry as {action} and email {enquiry.email}. The decision is final in this dashboard.</p>
-            {action === "booked" && enquiry.fulfilment !== "Collection" && (
-              <label>Agreed delivery and collection fee (£)
-                <input type="text" inputMode="decimal" pattern="[0-9]{1,5}(\.[0-9]{1,2})?" maxLength={8}
-                  placeholder="e.g. 35.00" value={deliveryFee} onChange={(event) => setDeliveryFee(event.target.value)} disabled={busy} />
-                <small>Leave blank if the amount still needs to be confirmed.</small>
-              </label>
-            )}
+            <h2>Decline this enquiry?</h2>
+            <p>This will mark the enquiry as rejected and email {enquiry.email}. The decision is final in this dashboard.</p>
             <label>Optional note to the customer<textarea value={note} maxLength={1500} rows={3} onChange={(event) => setNote(event.target.value)} disabled={busy} /></label>
             <div className="admin-actions">
-              <button className={`admin-button ${action === "booked" ? "admin-primary" : "admin-danger"}`} disabled={busy}>{saving ? "Saving…" : action === "booked" ? "Confirm booking and email" : "Decline and email"}</button>
-              <button type="button" className="admin-button" disabled={busy} onClick={() => { setAction(null); setNote(""); setDeliveryFee(""); }}>Cancel</button>
+              <button className="admin-button admin-danger" disabled={busy}>{saving ? "Saving…" : "Decline and email"}</button>
+              <button type="button" className="admin-button" disabled={busy} onClick={() => { setDeclining(false); setNote(""); }}>Cancel</button>
             </div>
           </form>
         ) : (
           <div className="admin-actions">
-            <button className="admin-button admin-primary" disabled={busy} onClick={() => setAction("booked")}>Approve booking</button>
-            <button className="admin-button" disabled={busy} onClick={() => setAction("rejected")}>Decline</button>
+            <EnquiryReview enquiry={enquiry} mode="booking" label="Approve booking" busy={busy} saving={saving}
+              send={(details, options) => update(enquiry.id, "booked", { details, ...options })} />
+            <button className="admin-button" disabled={busy} onClick={() => setDeclining(true)}>Decline</button>
           </div>
         )}
         {enquiry.status === "booked" && outcome?.notification === "sent" && (
@@ -223,7 +219,10 @@ function ReminderPanel({ enquiry, busy, saving, update }: {
   saving: boolean;
   update: UpdateEnquiry;
 }) {
+  const [confirming, setConfirming] = useState(false);
   const reminder = enquiry.reminder;
+  const confirmed = enquiry.decision?.bookingDetails;
+  const canUseConfirmed = Boolean(confirmed?.arrangements && isUpcomingEvent(confirmed.eventDate));
 
   return (
     <section className="admin-decision" aria-label="Pre-event reminder">
@@ -239,8 +238,27 @@ function ReminderPanel({ enquiry, busy, saving, update }: {
           )}
         </>
       ) : (
-        <ReminderReview enquiry={enquiry} busy={busy} saving={saving}
-          send={(details) => update(enquiry.id, "reminder", { details })} />
+        <>
+          {confirmed && canUseConfirmed && (
+            <>
+              <p>The reminder uses the confirmed details for {formatEventDate(confirmed.eventDate)} and goes to {confirmed.email}.</p>
+              <p className="admin-note"><strong>{confirmed.handover === "delivery" ? "Delivery:" : "Self-collection:"}</strong> {confirmed.arrangements}</p>
+            </>
+          )}
+          <div className="admin-actions">
+            {canUseConfirmed && (confirming ? (
+              <>
+                <button type="button" className="admin-button admin-primary" disabled={busy}
+                  onClick={async () => { if (!(await update(enquiry.id, "reminder"))) setConfirming(false); }}>
+                  {saving ? "Sending…" : "Confirm and send reminder"}
+                </button>
+                <button type="button" className="admin-button" disabled={busy} onClick={() => setConfirming(false)}>Cancel</button>
+              </>
+            ) : <button type="button" className="admin-button admin-primary" disabled={busy} onClick={() => setConfirming(true)}>Send reminder</button>)}
+            {!confirming && <EnquiryReview enquiry={enquiry} mode="reminder" label={canUseConfirmed ? "Edit reminder details" : "Prepare reminder"}
+              busy={busy} saving={saving} send={(details) => update(enquiry.id, "reminder", { details })} />}
+          </div>
+        </>
       )}
     </section>
   );

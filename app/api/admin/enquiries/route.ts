@@ -9,6 +9,7 @@ import { readGames } from "../../../enquiry-format";
 import { bookingConfirmation } from "../../../enquiry-confirmation";
 import { getEnquiryMailConfig, sendEmail } from "../../../enquiry-mail";
 import { getPackageTerms, parsePriceInPence } from "../../../package-terms";
+import { parseReminderDetails } from "../../../reminder-details";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export async function GET(request: Request) {
           decidedBy: outcome.decidedBy,
           customerNote: outcome.customerNote,
           notification: notificationState(outcome),
+          bookingDetails: outcome.bookingDetails,
         } : null,
         reminder: reminder ? {
           notification: notificationState(reminder), sentAt: reminder.emailSentAt,
@@ -95,7 +97,7 @@ export async function PATCH(request: Request) {
     return json({ error: "Expected a JSON request." }, 415);
   }
 
-  const raw = await request.json().catch(() => null) as { id?: unknown; action?: unknown; customerNote?: unknown; deliveryFee?: unknown } | null;
+  const raw = await request.json().catch(() => null) as { id?: unknown; action?: unknown; customerNote?: unknown; deliveryFee?: unknown; details?: unknown } | null;
   const id = raw?.id;
   const action = raw?.action;
   const inputNote = raw?.customerNote ?? "";
@@ -115,7 +117,14 @@ export async function PATCH(request: Request) {
 
     if (action !== "retry") {
       const booking = action === "booked";
-      const packageTerms = booking ? getPackageTerms(record.packageName ?? "") : undefined;
+      const bookingDetails = booking ? parseReminderDetails(raw?.details, { requireArrangements: false }) : null;
+      if (booking && !bookingDetails) {
+        return json({ error: "Review the booking details, including the customer email, date and handover method, before approving." }, 400);
+      }
+      const packageTerms = bookingDetails ? getPackageTerms(bookingDetails.packageName) : undefined;
+      if (bookingDetails && (!packageTerms || bookingDetails.games.length !== packageTerms.gameCount)) {
+        return json({ error: "Choose a package and select the number of tables it includes." }, 400);
+      }
       const fee = inputFee.trim() ? parsePriceInPence(inputFee.trim()) : null;
       if (booking && inputFee.trim() && fee === null) {
         return json({ error: "Enter the delivery fee in pounds and pence, for example 35.00." }, 400);
@@ -127,8 +136,9 @@ export async function PATCH(request: Request) {
         decidedBy: access.user.email,
         customerNote: inputNote.trim(),
         packagePricePence: packageTerms ? parsePriceInPence(packageTerms.price.slice(1)) : null,
-        deliveryFeePence: booking && record.fulfilment === "Collection" ? 0 : booking ? fee : null,
-        bookingTemplateVersion: booking ? 3 : null,
+        deliveryFeePence: bookingDetails?.handover === "collection" ? 0 : booking ? fee : null,
+        bookingTemplateVersion: booking ? 4 : null,
+        bookingDetails,
       }).onConflictDoNothing().returning({ id: decision.enquiryId });
       if (!created) return json({ error: "This enquiry has already been decided. Refresh to see its current status." }, 409);
     }
@@ -158,11 +168,15 @@ export async function PATCH(request: Request) {
     try {
       // Keep a previously attempted payload stable for Resend retries.
       const templateVersion = claimed.bookingTemplateVersion;
-      const message = claimed.status === "booked" && (templateVersion === 2 || templateVersion === 3)
-        ? bookingConfirmation(record, claimed.packagePricePence, claimed.deliveryFeePence, claimed.customerNote, templateVersion === 3)
+      const reviewed = claimed.bookingDetails;
+      const message = claimed.status === "booked" && (templateVersion === 2 || templateVersion === 3 || templateVersion === 4)
+        ? bookingConfirmation(
+            reviewed ? { ...reviewed, fulfilment: null } : record,
+            claimed.packagePricePence, claimed.deliveryFeePence, claimed.customerNote, templateVersion !== 2, reviewed ?? undefined,
+          )
         : decisionEmail(record, claimed.status, claimed.customerNote);
       await sendEmail(apiKey, {
-        from, to: [record.email], reply_to: ownerEmail,
+        from, to: [reviewed?.email ?? record.email], reply_to: ownerEmail,
         ...message,
       }, `iocus-decision-${id}-${claimed.status}`);
     } catch {
